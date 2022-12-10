@@ -71,9 +71,13 @@ set(LIBS ${LIBS} STB_IMAGE)
 add_library(GLAD "tools/glad.c")
 set(LIBS ${LIBS} GLAD)
 
+include_directories(${CMAKE_SOURCE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/includes)
 
+
 set(source_code_files 
+    features/framebuffer/FrameBuffer.cpp
+    features/framebuffer/glExtension.cpp
     features/gaussian_blur.cpp)
 
 
