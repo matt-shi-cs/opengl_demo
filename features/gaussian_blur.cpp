@@ -1,7 +1,7 @@
 /*** 
  * @Author: Matt.SHI
  * @Date: 2022-12-10 14:46:29
- * @LastEditTime: 2022-12-10 21:01:28
+ * @LastEditTime: 2022-12-10 21:25:34
  * @LastEditors: Matt.SHI
  * @Description: 
  * @FilePath: /opengl_demo/features/gaussian_blur.cpp
@@ -46,7 +46,7 @@ void generateFilePath(char* filename, double index,const unsigned char* basePath
     sprintf(filename, "%s_%.4f.png", basePath,index);
 }
 
-int main()
+int main(int argv,const char* argc[])
 {
     // glfw: initialize and configure
     // ------------------------------
@@ -58,6 +58,12 @@ int main()
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
+    //processing input params
+    const char* input_sample_file = "resources/features_res/gaussain_bulr/test.png";
+    if(argv > 1)
+    {
+        input_sample_file = argc[1];
+    }
 
     // glfw window creation
     // --------------------
@@ -137,9 +143,10 @@ int main()
     // load image, create texture and generate mipmaps
     int width, height, nrChannels,reqComp = 3;
     stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
-    unsigned char *data = stbi_load(FileSystem::getPath("resources/features_res/gaussain_bulr/test.png").c_str(), &width, &height, &nrChannels, reqComp);
+    unsigned char *data = stbi_load(FileSystem::getPath(input_sample_file).c_str(), &width, &height, &nrChannels, reqComp);
     if (data)
     {
+        std::cout<<"width:"<<width<<" height:"<<height<<" nrChannels:"<<nrChannels<<std::endl;
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
     }
@@ -209,7 +216,7 @@ int main()
 
     double startTime = 0.0;
     double endTime = 0.0;
-    int frame = 0;
+    int frameIndex = 0;
     bool bSave = false;
     // render loop
     // -----------
@@ -240,11 +247,11 @@ int main()
         GLuint texId = fbo.getColorId();        // texture object ID for render-to-texture
         const unsigned char* buffer = fbo.getColorBuffer();
 
-        frame++;
+        frameIndex++;
         endTime = glfwGetTime();
         if(endTime - startTime > 1.0)
         {
-            std::cout << "the fps is " <<  frame / (endTime - startTime) << std::endl;
+            std::cout << "[Frame]The fps is " <<  frameIndex / (endTime - startTime) << std::endl;
             if(g_save_frame > 0)
             {
                 g_save_frame = 0;
@@ -253,13 +260,12 @@ int main()
                 saveFrameBuffer2PNG((const char*)(buffer), width, height, 4,save_path);
             }
             startTime = endTime; 
-            frame = 0;
+            frameIndex = 0;
         }
         
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
-        
         //std::cout << "the cost time is " << end - start << " ms" << std::endl;
         glfwPollEvents();
     }
