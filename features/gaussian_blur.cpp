@@ -1,7 +1,7 @@
 /*** 
  * @Author: Matt.SHI
  * @Date: 2022-12-10 14:46:29
- * @LastEditTime: 2022-12-10 21:25:34
+ * @LastEditTime: 2022-12-10 21:49:49
  * @LastEditors: Matt.SHI
  * @Description: 
  * @FilePath: /opengl_demo/features/gaussian_blur.cpp
@@ -32,6 +32,7 @@ void processInput(GLFWwindow *window);
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 int g_save_frame = 0;
+int g_draw_frame = 1;
 unsigned char g_save_base_path[] = "./frames/";
 
 void saveFrameBuffer2PNG(const char* buf, 
@@ -141,10 +142,10 @@ int main(int argv,const char* argc[])
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     
     // load image, create texture and generate mipmaps
-    int width, height, nrChannels,reqComp = 3;
+    int width = 0, height = 0, nrChannels = 0,reqComp = 3;
     stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
     unsigned char *data = stbi_load(FileSystem::getPath(input_sample_file).c_str(), &width, &height, &nrChannels, reqComp);
-    if (data)
+    if (nullptr != data)
     {
         std::cout<<"width:"<<width<<" height:"<<height<<" nrChannels:"<<nrChannels<<std::endl;
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
@@ -158,56 +159,7 @@ int main(int argv,const char* argc[])
     stbi_image_free(data);
     //texture end
 
-    //for swap texture==========================
-    /*
-    GLuint textureForSwapId;  
-    glGenTextures(1, &textureForSwapId);  
-    glBindTexture(GL_TEXTURE_2D, textureForSwapId);  
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);  
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);  
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);  
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);  
-    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE); //  automatic  mipmap  
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 
-                width, 
-                height, 0,  
-                GL_RGBA, 
-                GL_UNSIGNED_BYTE, 0);  
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    // create a renderbuffer object to store depth info  
-    GLuint rboId;  
-    glGenRenderbuffers(1, &rboId);  
-    glBindRenderbuffer(GL_RENDERBUFFER, rboId);  
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT,  
-                            width, height);  
-    glBindRenderbuffer(GL_RENDERBUFFER, 0); 
-
-    // create a framebuffer object
-    GLuint fboId;
-    glGenFramebuffers(1, &fboId);
-    glBindFramebuffer(GL_FRAMEBUFFER, fboId);
-
-    // attach the texture to FBO color attachment point
-    glFramebufferTexture2D(GL_FRAMEBUFFER,        // 1. fbo target: GL_FRAMEBUFFER
-                        GL_COLOR_ATTACHMENT0,  // 2. attachment point
-                        GL_TEXTURE_2D,         // 3. tex target: GL_TEXTURE_2D
-                        textureForSwapId,             // 4. tex ID
-                        0);                    // 5. mipmap level: 0(base)
-
-    // attach the renderbuffer to depth attachment point
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER,      // 1. fbo target: GL_FRAMEBUFFER
-                            GL_DEPTH_ATTACHMENT, // 2. attachment point
-                            GL_RENDERBUFFER,     // 3. rbo target: GL_RENDERBUFFER
-                            rboId);              // 4. rbo ID
-
-    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    bool fboUsed = true;
-    if(status != GL_FRAMEBUFFER_COMPLETE)
-    {
-        fboUsed = false;
-    }
-    */
+    //using framebuffer
     FrameBuffer fbo;
     fbo.init(width, height);        // for single-sample FBO
     //============================
@@ -225,25 +177,21 @@ int main(int argv,const char* argc[])
         processInput(window);
 
         // render
-        // ------
-        //glBindFramebuffer(GL_FRAMEBUFFER, fboId);
+        //fbo.bind();
 
-        fbo.bind();
-        
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-
         // bind Texture
         glBindTexture(GL_TEXTURE_2D, texture);
         // render container
         ourShader.use();
         glBindVertexArray(VAO);
 
-        //glBindFramebuffer(GL_FRAMEBUFFER, 0); // back to default
-        fbo.update();
-        fbo.unbind();
+        //fbo.update();
+        //fbo.unbind();
 
-        //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
         GLuint texId = fbo.getColorId();        // texture object ID for render-to-texture
         const unsigned char* buffer = fbo.getColorBuffer();
 
@@ -293,6 +241,10 @@ void processInput(GLFWwindow *window)
     else if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
     {
         g_save_frame = 1;
+    }
+    else if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    {
+        g_draw_frame = 2;
     }
 }
 

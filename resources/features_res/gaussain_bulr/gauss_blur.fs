@@ -48,6 +48,7 @@ void main()
 */
 
 
+/*
 out vec4 FragColor;
   
 in vec3  DefaultColor;
@@ -79,4 +80,41 @@ void main()
     }
     FragColor = vec4(result, 1.0);
 }
+*/
+
+const int KernelSize = 9;
+const float stepValue = 0.005;
+
+out vec4 FragColor;
+in vec3  DefaultColor;
+in vec2  TexCoords;
+
+uniform sampler2D image;
+
+void main() {
+
+    vec2 uv = TexCoords;
+    vec4 sum = vec4(0.0);
+    
+    //3x3 kernel matrix
+    float Kernel[KernelSize];
+    Kernel[6] = 1.0; Kernel[7] = 2.0; Kernel[8] = 1.0;
+    Kernel[3] = 2.0; Kernel[4] = 4.0; Kernel[5] = 2.0;
+    Kernel[0] = 1.0; Kernel[1] = 2.0; Kernel[2] = 1.0;
+    
+    float fStep = stepValue;
+    //pixel offset
+    vec2 Offset[KernelSize];
+    Offset[0] = vec2(-fStep,-fStep); Offset[1] = vec2(0.0,-fStep); Offset[2] = vec2(fStep,-fStep);
+    Offset[3] = vec2(-fStep,0.0);    Offset[4] = vec2(0.0,0.0);    Offset[5] = vec2(fStep,0.0);
+    Offset[6] = vec2(-fStep, fStep); Offset[7] = vec2(0.0, fStep); Offset[8] = vec2(fStep, fStep);
+
+    int i = 0;
+    for (i = 0; i < KernelSize; i++)
+    {
+        sum += texture(image, uv + Offset[i]) * Kernel[i];
+    }
+    FragColor = sum/16.0;
+}
+
 
