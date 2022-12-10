@@ -22,9 +22,9 @@ void main()
 		for(int j = 0; j < 5; j++)
 		{
 			FragColor += texture2D( texture1, ( vec2(gl_FragCoord)+vec2(0.0, offset[i]) )/800.0 ) * weight[i][j];
-		FragColor += texture2D( texture1, ( vec2(gl_FragCoord)-vec2(0.0, offset[i]) )/800.0 ) * weight[i][j];
-		FragColor += texture2D( texture1, ( vec2(gl_FragCoord)+vec2(offset[i], 0.0) )/800.0 ) * weight[i][j];
-		FragColor += texture2D( texture1, ( vec2(gl_FragCoord)-vec2(offset[i], 0.0) )/800.0 ) * weight[i][j];
+			FragColor += texture2D( texture1, ( vec2(gl_FragCoord)-vec2(0.0, offset[i]) )/800.0 ) * weight[i][j];
+			FragColor += texture2D( texture1, ( vec2(gl_FragCoord)+vec2(offset[i], 0.0) )/800.0 ) * weight[i][j];
+			FragColor += texture2D( texture1, ( vec2(gl_FragCoord)-vec2(offset[i], 0.0) )/800.0 ) * weight[i][j];
 		}
 		
 	}

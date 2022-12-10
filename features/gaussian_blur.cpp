@@ -1,10 +1,10 @@
 /*** 
  * @Author: Matt.SHI
  * @Date: 2022-12-10 14:46:29
- * @LastEditTime: 2022-12-10 15:59:08
+ * @LastEditTime: 2022-12-10 20:05:47
  * @LastEditors: Matt.SHI
  * @Description: 
- * @FilePath: /opengl_shader_demo/features/gaussian_blur.cpp
+ * @FilePath: /opengl_demo/features/gaussian_blur.cpp
  * @Copyright © 2022 Essilor. All rights reserved.
  */
 #include <glad/glad.h>
@@ -67,10 +67,10 @@ int main()
 
     float vertices[] = {
         // positions          // colors           // texture coords
-         1.0f,  1.0f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // top right
-         1.0f, -1.0f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // bottom right
-        -1.0f, -1.0f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
-        -1.0f,  1.0f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // top left 
+         0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // top right
+         0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // bottom right
+        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
+        -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // top left 
     };
     unsigned int indices[] = {  
         0, 1, 3, // first triangle
@@ -106,26 +106,83 @@ int main()
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture); // all upcoming GL_TEXTURE_2D operations now have effect on this texture object
     // set the texture wrapping parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT/*GL_REPEAT*/);	// set texture wrapping to GL_REPEAT (default wrapping method)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT/*GL_REPEAT*/);
+    // set boarder color
+    float borderColor[] = { 1.0f, 1.0f, 0.0f, 1.0f };
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
     // set texture filtering parameters
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     
     // load image, create texture and generate mipmaps
-    int width, height, nrChannels;
+    int width, height, nrChannels,reqComp = 3;
     stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
-    unsigned char *data = stbi_load(FileSystem::getPath("resources/features_res/gaussain_bulr/test.png").c_str(), &width, &height, &nrChannels, 0);
+    unsigned char *data = stbi_load(FileSystem::getPath("resources/textures/container.jpg").c_str(), &width, &height, &nrChannels, reqComp);
     if (data)
     {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
+        std::cout << "The 1st pixel:" <<data[0]<<" "<<data[1] <<" "<<data[2]<< std::endl;
     }
     else
     {
         std::cout << "Failed to load texture" << std::endl;
+        return -1;
     }
     stbi_image_free(data);
+    //texture end
+
+    //for swap texture
+    GLuint textureForSwapId;  
+    glGenTextures(1, &textureForSwapId);  
+    glBindTexture(GL_TEXTURE_2D, textureForSwapId);  
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);  
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);  
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);  
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);  
+    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE); //  automatic  mipmap  
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 
+                width, 
+                height, 0,  
+                GL_RGBA, 
+                GL_UNSIGNED_BYTE, 0);  
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    // create a renderbuffer object to store depth info  
+    GLuint rboId;  
+    glGenRenderbuffers(1, &rboId);  
+    glBindRenderbuffer(GL_RENDERBUFFER, rboId);  
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT,  
+                            width, height);  
+    glBindRenderbuffer(GL_RENDERBUFFER, 0); 
+
+    // create a framebuffer object
+    GLuint fboId;
+    glGenFramebuffers(1, &fboId);
+    glBindFramebuffer(GL_FRAMEBUFFER, fboId);
+
+    // attach the texture to FBO color attachment point
+    glFramebufferTexture2D(GL_FRAMEBUFFER,        // 1. fbo target: GL_FRAMEBUFFER
+                        GL_COLOR_ATTACHMENT0,  // 2. attachment point
+                        GL_TEXTURE_2D,         // 3. tex target: GL_TEXTURE_2D
+                        textureForSwapId,             // 4. tex ID
+                        0);                    // 5. mipmap level: 0(base)
+
+    // attach the renderbuffer to depth attachment point
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER,      // 1. fbo target: GL_FRAMEBUFFER
+                            GL_DEPTH_ATTACHMENT, // 2. attachment point
+                            GL_RENDERBUFFER,     // 3. rbo target: GL_RENDERBUFFER
+                            rboId);              // 4. rbo ID
+
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    bool fboUsed = true;
+    if(status != GL_FRAMEBUFFER_COMPLETE)
+    {
+        fboUsed = false;
+    }
+            
+    // all upcoming GL_TEXTURE_2D operations now have effect on this texture object
 
     double startTime = 0.0;
     double endTime = 0.0;
@@ -139,23 +196,24 @@ int main()
 
         // render
         // ------
+        
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         // bind Texture
         glBindTexture(GL_TEXTURE_2D, texture);
-
         // render container
         ourShader.use();
-        ourShader.setVec2("resolution", 800.0f, 600.0f);
         glBindVertexArray(VAO);
 
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
         frame++;
         endTime = glfwGetTime();
         if(endTime - startTime > 1.0)
         {
             std::cout << "the fps is " <<  frame / (endTime - startTime) << std::endl;
+            std::cout << "The 1st pixel:" <<data[0]<<" "<<data[1] <<" "<<data[2]<< std::endl;
             startTime = endTime; 
             frame = 0;
         }
