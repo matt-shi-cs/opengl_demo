@@ -9,7 +9,9 @@
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceFolder}/build/opengl_demo",
-            "args": [],
+            "args": [
+                "/Users/mattshi/work/essilor/code/feasibility/opengl/opengl_demo/resources/features_res/gaussain_bulr/zones.bmp"
+            ],
             "stopAtEntry": true,
             "cwd": "${workspaceFolder}/build",
             "environment": [],

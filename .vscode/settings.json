@@ -90,6 +90,7 @@
         "stack": "cpp",
         "typeindex": "cpp",
         "stop_token": "cpp",
-        "*.ipp": "cpp"
+        "*.ipp": "cpp",
+        "codecvt": "cpp"
     }
 }

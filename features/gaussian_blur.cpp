@@ -1,12 +1,13 @@
-/***
+/*** 
  * @Author: Matt.SHI
  * @Date: 2022-12-10 14:46:29
- * @LastEditTime: 2022-12-11 18:25:51
+ * @LastEditTime: 2022-12-18 20:54:37
  * @LastEditors: Matt.SHI
- * @Description:
+ * @Description: 
  * @FilePath: /opengl_demo/features/gaussian_blur.cpp
  * @Copyright © 2022 Essilor. All rights reserved.
  */
+
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -33,6 +34,7 @@
 #include <features/framebuffer/FrameBuffer.h>
 
 #include <iostream>
+#include <algorithm>
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/core.hpp>
@@ -56,6 +58,10 @@ int g_save_frame = 1;        //'s'
 int g_draw_frame = 1;        //'d'
 int g_using_framebuffer = 0; //'f'
 int g_using_opencv = 0;
+int g_using_camera = 0;
+
+float g_running_kernelStep = 0.005;
+bool g_running_params_changed = false;
 
 cv::VideoCapture g_cam;
 unsigned char g_save_base_path[] = "./frames/";
@@ -113,13 +119,69 @@ unsigned int *create2DTexture(int count)
     return pTextureIdxs;
 }
 
-void updateTexture2DMemData(unsigned int textureIdx, int width, int height, int channel,
+void updateTexture2DMemData(unsigned int textureIdx, unsigned int textureIDInGL,
+                            int width, int height, int channel,
                             unsigned int texturePixelFmt, unsigned int dataPixelFmt, unsigned char *data)
 {
+    glActiveTexture(textureIDInGL); 
     glBindTexture(GL_TEXTURE_2D, textureIdx);
     glTexImage2D(GL_TEXTURE_2D, 0, texturePixelFmt, width, height, 0, dataPixelFmt, GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);
 }
+
+unsigned int creatFilterZoneTexture()
+{
+    unsigned int textureIdx;
+    glGenTextures(1, &textureIdx);
+    glBindTexture(GL_TEXTURE_2D, textureIdx); // all upcoming GL_TEXTURE_2D operations now have effect on this texture object
+    // set the texture wrapping parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT /*GL_REPEAT*/); // set texture wrapping to GL_REPEAT (default wrapping method)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT /*GL_REPEAT*/);
+    // set texture filtering parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    return textureIdx;
+}
+
+void fillTextureByBuffer(unsigned char *data, unsigned int width, unsigned int height,
+                                 unsigned int textureID, unsigned int textureIDInGL,
+                                 unsigned int innerPixelFmt = GL_RGB, unsigned int inputPixelFmt = GL_RGB, unsigned int dataType = GL_UNSIGNED_BYTE)
+{
+    glActiveTexture(textureIDInGL); 
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glTexImage2D(GL_TEXTURE_2D, 0, innerPixelFmt, width, height, 0, inputPixelFmt, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+}
+
+unsigned char* fillTextureByFile(const char* filePath,
+    int& width, int& height, int& nrChannels,
+    unsigned int texureID, unsigned int textureIDInGL,
+    unsigned int innerPixelFmt = GL_RGB, unsigned int inputPixelFmt = GL_RGB, unsigned int dataType = GL_UNSIGNED_BYTE)
+{
+    unsigned char *data = stbi_load(filePath, &width, &height, &nrChannels, nrChannels);
+    if (data)
+    {
+       fillTextureByBuffer(data, width, height, 
+       texureID, textureIDInGL, 
+       innerPixelFmt, inputPixelFmt, dataType);
+       std::cout << "Load texture:" <<filePath <<" done"<<std::endl;
+    }
+    else
+    {
+        if(nullptr == filePath)
+        {
+            std::cout << "Failed to load texture:NULLptr" <<std::endl;
+        }
+        else {
+            std::cout << "Failed to load texture:" <<filePath <<std::endl;
+        }
+    }
+    return data;
+}
+
+
+
 
 ///////////////////////////////////////////////////////////////////////////////
 void drawString(const char *str, int x, int y, float color[4], void *font)
@@ -185,10 +247,15 @@ void showInfo(int screenWidth, int screenHeight, double frameRate)
 #endif                          // __ENABLE_GLUT__
 }
 
+void updateBlurParams(float stepSize,const Shader& sdr)
+{
+    sdr.setFloat("kernelStep",stepSize);
+}
+
 int main(int argv, const char *argc[])
 {
     // init cam
-    cv::Mat frameBufMat;
+    cv::Mat liveFrameBufMat;
     unsigned char *frameBufForSaving = NULL;
     // glfw: initialize and configure
     // ------------------------------
@@ -202,14 +269,17 @@ int main(int argv, const char *argc[])
 #endif
     // processing input params
     const char *input_data_path = nullptr;
+    const char *input_zone_path = nullptr;
     if (argv > 1)
     {
-        input_data_path = argc[1];
-        std::cout << "[INPUT] use input file, path: " << input_data_path << std::endl;
+        input_zone_path = argc[1];
+        g_using_camera = 1;
+        std::cout << "[INPUT] use input file, path: " << input_zone_path << std::endl;
     }
     else
     {
         std::cout << "[INPUT] use camera live stream: " << std::endl;
+        g_using_camera = 1;
     }
 
     // glfw window creation
@@ -236,6 +306,7 @@ int main(int argv, const char *argc[])
     // ------------------------------------
     Shader ourShader("../resources/features_res/gaussain_bulr/gauss_blur.vs",
                      "../resources/features_res/gaussain_bulr/gauss_blur.fs");
+    ourShader.use();
 
     float vertices[] = {
         // positions          // colors           // texture coords
@@ -275,42 +346,57 @@ int main(int argv, const char *argc[])
     // -------------------------
     int texture2DCount = 1;
     unsigned int *textureIdxs = create2DTexture(texture2DCount);
+    std::cout<<"[TEXTURE] texture id: "<<textureIdxs[0]<<std::endl;
+    //ourShader.setInt("imageTexture", textureIdxs[0]); 
+    glUniform1i(glGetUniformLocation(ourShader.ID, "imageTexture"), 0);
 
     // load image, create texture and generate mipmaps
-    int width = 0, height = 0, nrChannels = 0, reqComp = 3;
+    int width = 0, height = 0, nrChannels = 0;
     if (nullptr != input_data_path)
     {
-        stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
-        unsigned char *data = stbi_load(input_data_path /*FileSystem::getPath(input_data_path).c_str()*/, &width, &height, &nrChannels, reqComp);
-        if (nullptr != data)
-        {
-            std::cout << "[FILE]" << input_data_path << " width:" << width << " height:" << height << " nrChannels:" << nrChannels << std::endl;
-            updateTexture2DMemData(textureIdxs[0], width, height, nrChannels, GL_RGB, GL_RGB, data);
-            glViewport(0, 0, width, height);
-            stbi_image_free(data);
-        }
-        else
+        unsigned char *data = fillTextureByFile(
+            input_data_path, width, height, nrChannels,
+            textureIdxs[0],GL_TEXTURE0,
+            GL_RGB,GL_RGB,GL_UNSIGNED_BYTE);
+        liveFrameBufMat = cv::Mat(height, width, CV_8UC3, data);
+        glViewport(0, 0, width, height);
+        
+       if (nullptr == data)
         {
             std::cout << "Failed to load texture" << std::endl;
-            return -1;
         }
     }
     else
     {
         initCam();
-        readFrame(frameBufMat);
-        width = frameBufMat.cols;
-        height = frameBufMat.rows;
-        
-        std::cout << "[CAMERA] inited:  width = " << width << " height = " << height << " fmt = "<<frameBufMat.type() <<std::endl;
+        readFrame(liveFrameBufMat);
+        width = liveFrameBufMat.cols;
+        height = liveFrameBufMat.rows;
+        std::cout << "[CAMERA] inited:  width = " << width << " height = " << height << " fmt = "<<liveFrameBufMat.type() <<std::endl;
     }
     // texture end
+
+    //zone texture
+    int nrChannels_zone = 3, width_zone = 0, height_zone = 0;
+    unsigned int zoneTextureIdx = creatFilterZoneTexture();
+    std::cout<<"[TEXTURE] filter zone id: "<<zoneTextureIdx<<std::endl;
+    //ourShader.setInt("filterZones", zoneTextureIdx); 
+    glUniform1i(glGetUniformLocation(ourShader.ID, "filterZones"), 1);
+    unsigned char* g_zones_buffer =  fillTextureByFile(input_zone_path,
+        width_zone, height_zone, nrChannels_zone,
+        zoneTextureIdx,GL_TEXTURE1,
+        GL_RGB,GL_RGB,GL_UNSIGNED_BYTE);
 
     // using framebuffer
     FrameBuffer fbo;
     fbo.init(width, height); // for single-sample FBO
+
     // init buffer 
     frameBufForSaving = new unsigned char[width * height * 4]; // RGBA
+
+    //init shaderparam
+    updateBlurParams(g_running_kernelStep,ourShader);
+
     //================================================================================================
 
     double startTime = 0.0;
@@ -324,21 +410,27 @@ int main(int argv, const char *argc[])
     {
         processInput(window);
         // read cam
-        if (!frameBufMat.empty())
+        if (g_using_camera)
         {
-            readFrame(frameBufMat);
+            readFrame(liveFrameBufMat);
+        }
+        if(g_running_params_changed)
+        {
+            updateBlurParams(g_running_kernelStep,ourShader);
+            g_running_params_changed = false;
         }
 
         startTime = glfwGetTime();
         if(g_using_opencv)
         {
-            cv::GaussianBlur(frameBufMat, frameBufMat, cv::Size(3, 3), 3, 3);
+            cv::GaussianBlur(liveFrameBufMat, liveFrameBufMat, cv::Size(17, 17), 0, 0);
 
             glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT);
 
-            updateTexture2DMemData(textureIdxs[0], frameBufMat.cols, frameBufMat.rows, 3,
-                                    GL_RGB, GL_BGR, frameBufMat.data);
+            updateTexture2DMemData(textureIdxs[0], GL_TEXTURE0,
+                                    liveFrameBufMat.cols, liveFrameBufMat.rows, nrChannels,
+                                    GL_RGB, GL_BGR, liveFrameBufMat.data);
             glBindVertexArray(VAO);
             if (g_draw_frame > 0)
             {
@@ -346,6 +438,7 @@ int main(int argv, const char *argc[])
             }
         }
         else{
+            
             glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT);
             // bind Texture
@@ -357,20 +450,27 @@ int main(int argv, const char *argc[])
             {
                 opTextureIdx = textureIdxs[0];
             }
-            // glBindTexture(GL_TEXTURE_2D, opTextureIdx);
 
-            if (!frameBufMat.empty())
+            if (!liveFrameBufMat.empty())
             {
-                updateTexture2DMemData(opTextureIdx, frameBufMat.cols, frameBufMat.rows, 3,
-                                    GL_RGB, GL_BGR, frameBufMat.data);
+                updateTexture2DMemData(opTextureIdx, GL_TEXTURE0,
+                                    liveFrameBufMat.cols, liveFrameBufMat.rows, nrChannels,
+                                    GL_RGB, GL_BGR, liveFrameBufMat.data);
             }
+            if(nullptr != g_zones_buffer)
+            {
+                updateTexture2DMemData(zoneTextureIdx, GL_TEXTURE1,
+                                    width_zone, height_zone, nrChannels_zone,
+                                    GL_RGB, GL_BGR, g_zones_buffer);
+            }
+
+            ourShader.use();
 
             // render
             if (g_using_framebuffer)
             {
                 fbo.bind();
             }
-            ourShader.use();
             glBindVertexArray(VAO);
 
             if (g_using_framebuffer)
@@ -387,7 +487,7 @@ int main(int argv, const char *argc[])
         endTime = glfwGetTime();
 
         frameIndex++;
-        if (endTime - startTime >= 0.001)
+        if (endTime - startTime >= 0.0001)
         {
             double frameRate = frameIndex / (endTime - startTime);
             showInfo(width, height, frameRate);
@@ -467,6 +567,18 @@ void processInput(GLFWwindow *window)
     else if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
     {
         g_using_opencv = g_using_opencv ? 0 : 1;
+    }
+    else if(glfwGetKey(window, GLFW_KEY_PAGE_UP) == GLFW_PRESS)
+    {
+        g_running_kernelStep -= 0.0005;
+        g_running_kernelStep = fmax(0.0001,g_running_kernelStep);
+        g_running_params_changed = true;
+    }
+    else if(glfwGetKey(window, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS)
+    {
+        g_running_kernelStep += 0.0005;
+        g_running_kernelStep = fmin(0.01,g_running_kernelStep);
+        g_running_params_changed = true;
     }
 }
 
