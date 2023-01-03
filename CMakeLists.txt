@@ -7,6 +7,8 @@ set(CMAKE_CXX_STANDARD 17) # this does nothing for MSVC, use target_compile_opti
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
+option(BUILD_TRAGET_DEMO "target type[on =demo,off=lib]" ON)
+
 IF(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build (Debug or Release)" FORCE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
@@ -35,10 +37,7 @@ message(STATUS "Found GLFW3 in ${GLFW3_INCLUDE_DIRS}")
 find_package(ASSIMP REQUIRED)
 message(STATUS "Found ASSIMP in ${ASSIMP_INCLUDE_DIRS}")
 
-# find_package(SOIL REQUIRED)
-# message(STATUS "Found SOIL in ${SOIL_INCLUDE_DIR}")
-# find_package(GLEW REQUIRED)
-# message(STATUS "Found GLEW in ${GLEW_INCLUDE_DIR}")
+
 if(APPLE)
   find_package(Freetype REQUIRED)
   message(STATUS "Found Freetype in ${FREETYPE_INCLUDE_DIRS}")
@@ -86,11 +85,28 @@ include_directories(${CMAKE_SOURCE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/includes)
 
 
-set(source_code_files 
+set(source_for_core
+    features/framebuffer/FrameBuffer.cpp
+    features/framebuffer/glExtension.cpp
+    features/gaussian_blur_core.cpp)
+
+set(source_for_demo 
+    features/gaussian_blur_main.cpp)
+
+set(source_all_in_one
     features/framebuffer/FrameBuffer.cpp
     features/framebuffer/glExtension.cpp
     features/gaussian_blur.cpp)
 
+if(BUILD_TRAGET_DEMO)
+  set(source_code_files 
+    ${source_for_core}
+    ${source_for_demo})
+else()
+  set(source_code_files ${source_for_core})
+endif()
+message(STATUS "all source file: ${source_code_files}")
+message(STATUS "all source file: ${BUILD_TRAGET_DEMO}")
 
 add_executable(${PROJECT_NAME} ${source_code_files})
 target_link_libraries(${PROJECT_NAME} ${LIBS})

@@ -1,7 +1,7 @@
 /*** 
  * @Author: Matt.SHI
  * @Date: 2022-12-10 14:46:29
- * @LastEditTime: 2022-12-18 20:54:37
+ * @LastEditTime: 2022-12-25 18:12:10
  * @LastEditors: Matt.SHI
  * @Description: 
  * @FilePath: /opengl_demo/features/gaussian_blur.cpp
@@ -319,6 +319,7 @@ int main(int argv, const char *argc[])
         0, 1, 3, // first triangle
         1, 2, 3  // second triangle
     };
+    
     unsigned int VBO, VAO, EBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
