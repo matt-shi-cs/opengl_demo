@@ -1,7 +1,7 @@
 /*** 
  * @Author: Matt.SHI
  * @Date: 2023-01-03 13:29:47
- * @LastEditTime: 2023-01-03 15:07:15
+ * @LastEditTime: 2023-01-04 20:10:36
  * @LastEditors: Matt.SHI
  * @Description: 
  * @FilePath: /opengl_demo/features/exports/gaussian_blur_lib_export.h
@@ -47,6 +47,8 @@ extern "C"
     
     void initIns(long objIns, unsigned int w, unsigned int h,unsigned int channel,
         const char* vertexShaderFile, const char* fragmentShaderFile);
+
+    void setKernelStep(long objIns, float kernelStep);
 
     long doGaussianBlur(long objIns, 
         unsigned char* data, unsigned int w, unsigned int h, unsigned int channel,

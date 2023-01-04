@@ -1,7 +1,7 @@
 /*** 
  * @Author: Matt.SHI
  * @Date: 2022-12-29 17:30:09
- * @LastEditTime: 2023-01-04 19:44:22
+ * @LastEditTime: 2023-01-04 20:09:29
  * @LastEditors: Matt.SHI
  * @Description: 
  * @FilePath: /opengl_demo/features/gaussian_blur_core.cpp
@@ -41,7 +41,7 @@ namespace ESSILOR
                                          m_shader(nullptr),
                                          m_flags_using_framebuffer(false),
                                          m_flags_enable_gui(false),
-                                         m_kernel_step(0.005)
+                                         m_kernel_step(0.002)
     {
     }
 
@@ -99,29 +99,32 @@ namespace ESSILOR
         unsigned int filter_zone_image_height,
         unsigned int filter_zone_image_channel)
     {
-        std::cout << "[doGaussianBlur][base] with:w" << base_image_width << " h:" << base_image_height << " channel:" << base_image_channel << std::endl;
         unsigned long base_image_len = base_image_width * base_image_height * base_image_channel;
         unsigned long filter_zone_image_len = filter_zone_image_width * filter_zone_image_height * filter_zone_image_channel;
-        std::cout << "[doGaussianBlur][base] pixel:" << (int)(base_image_data[base_image_len - 3]) << "," << (int)(base_image_data[base_image_len - 2]) << "," << (int)(base_image_data[base_image_len - 1]) << std::endl;
-        std::cout << "[doGaussianBlur][base] pixel:" << (int)(base_image_data[0]) << "," << (int)(base_image_data[1]) << "," << (int)(base_image_data[2]) << std::endl;
-
-        std::cout << "[doGaussianBlur][filter] pixel:" << (int)(filter_zone_image_data[filter_zone_image_len - 3]) << "," << (int)(filter_zone_image_data[filter_zone_image_len - 2]) << "," << (int)(filter_zone_image_data[filter_zone_image_len - 1]) << std::endl;
-        std::cout << "[doGaussianBlur][filter] pixel:" << (int)(filter_zone_image_data[0]) << "," << (int)(filter_zone_image_data[1]) << "," << (int)(filter_zone_image_data[2]) << std::endl;
-
-        std::cout << "[doGaussianBlur][filter] with:w" << filter_zone_image_width << " h:" << filter_zone_image_height << " channel:" << filter_zone_image_channel << std::endl;
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         // GLuint opTextureIdx = m_frameBuffer->getColorId();
 
+        auto shader_base_pixel_fmt = GL_RGBA;
+        auto shader_filter_pixel_fmt = GL_RGBA;
+        if(base_image_channel == 3)
+        {
+            shader_base_pixel_fmt = GL_RGB;
+        }
+        if(base_image_channel == 3)
+        {
+            shader_filter_pixel_fmt = GL_RGB;
+        }
+
         // update buffer
         updateTexture2DMemData(m_base_textureIdx, GL_TEXTURE0,
                                base_image_width, base_image_height, base_image_channel,
-                               GL_RGBA, GL_BGR, base_image_data);
+                               GL_RGBA, shader_base_pixel_fmt, base_image_data);
 
         updateTexture2DMemData(m_filter_zone_textureIdx, GL_TEXTURE1,
                                filter_zone_image_width, filter_zone_image_height, filter_zone_image_channel,
-                               GL_RGBA, GL_RGBA, filter_zone_image_data);
+                               GL_RGBA, shader_filter_pixel_fmt, filter_zone_image_data);
 
         // call shader
         m_shader->use();
