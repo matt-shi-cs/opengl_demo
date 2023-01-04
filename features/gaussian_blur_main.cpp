@@ -1,7 +1,7 @@
 /*** 
  * @Author: Matt.SHI
  * @Date: 2023-01-03 09:33:35
- * @LastEditTime: 2023-01-03 11:40:21
+ * @LastEditTime: 2023-01-04 13:43:01
  * @LastEditors: Matt.SHI
  * @Description: 
  * @FilePath: /opengl_demo/features/gaussian_blur_main.cpp
@@ -34,7 +34,7 @@ cv::VideoCapture g_cam;
 
 constexpr int WIN_W = 1920;
 constexpr int WIN_H = 1440;
-constexpr int WIN_C = 4;
+constexpr int WIN_C = 3;
 
 unsigned char g_save_base_path[] = "./frames/";
 bool g_save_imgs = true;
@@ -105,7 +105,14 @@ int main(int argv, const char *argc[])
 
     const char* filterZoneFile = argc[1];
     //init
-    g_blur_core.init(WIN_W,WIN_H,WIN_C);
+    const char* vertexShaderFile = "../resources/features_res/gaussain_bulr/gauss_blur.vs";
+    const char* fragmentShaderFile = "../resources/features_res/gaussain_bulr/gauss_blur.fs";
+    g_blur_core.set_enable_gui(true);
+
+    g_blur_core.init(WIN_W,WIN_H,WIN_C,
+        vertexShaderFile,
+        fragmentShaderFile
+    );
 
     //init cam
     initCam();

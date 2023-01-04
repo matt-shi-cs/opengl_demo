@@ -100,25 +100,9 @@ void gaussianBulr3(out vec4 color,in vec2 uv,in float stepValue, in int kernalSi
 void main(){
     vec2 uv = TexCoords;
     vec4 kernalSizeV4 = texture(filterZones,uv);
-    //int kernalSize = int(kernalSizeV4.x);
-    /*
-    if(kernalSize >= 35){   
-        //gaussianBulr35(FragColor,uv,kernelStep,kernalSize,kernel35);
-        FragColor = texture(imageTexture,uv);
-    }
-    else if(kernalSize >= 17){
-        //gaussianBulr17(FragColor,uv,kernelStep,kernalSize,kernel17);
-        FragColor = texture(imageTexture,uv);
-    }
-    else if(kernalSize >= 9){
-        //gaussianBulr9(FragColor,uv,kernelStep,kernalSize,kernel9);
-        FragColor = texture(imageTexture,uv);
-    }
-    else{
-        FragColor = texture(imageTexture,uv);
-    }*/
     int kernalSize = 3;
     float stepValue = kernalSizeV4.x * kernelStep*12.8;
+    
     gaussianBulr3(FragColor,uv,stepValue,kernalSize,kernel3);
 }
 

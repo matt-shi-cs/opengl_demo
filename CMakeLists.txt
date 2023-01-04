@@ -1,13 +1,16 @@
 cmake_minimum_required (VERSION 3.0)
 cmake_policy(VERSION 3.0)
 
-project(opengl_demo)
+project(guassian_blur)
 
 set(CMAKE_CXX_STANDARD 17) # this does nothing for MSVC, use target_compile_options below
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
-option(BUILD_TRAGET_DEMO "target type[on =demo,off=lib]" ON)
+
+option(BUILD_TARGET_DEMO "target type[on =demo]" OFF)
+option(BUILD_TARGET_TEST "target type[on =test]" OFF)
+option(BUILD_TARGET_LIB "target type[on =export lib]" OFF)
 
 IF(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build (Debug or Release)" FORCE)
@@ -89,24 +92,39 @@ set(source_for_core
     features/framebuffer/FrameBuffer.cpp
     features/framebuffer/glExtension.cpp
     features/gaussian_blur_core.cpp)
+  
+set(source_for_export
+    features/exports/gaussian_blur_lib_export.cpp)
 
 set(source_for_demo 
-    features/gaussian_blur_main.cpp)
-
-set(source_all_in_one
     features/framebuffer/FrameBuffer.cpp
     features/framebuffer/glExtension.cpp
-    features/gaussian_blur.cpp)
+    features/gaussian_blur_demo.cpp)
 
-if(BUILD_TRAGET_DEMO)
+set(source_for_testlib
+    features/gaussian_blur_main.cpp)
+
+if(BUILD_TARGET_DEMO)
+  set(source_code_files 
+    ${source_for_demo})
+elseif(BUILD_TARGET_LIB)
   set(source_code_files 
     ${source_for_core}
-    ${source_for_demo})
-else()
-  set(source_code_files ${source_for_core})
+    ${source_for_export})
+elseif(BUILD_TARGET_TEST)
+  set(source_code_files 
+    ${source_for_core}
+    ${source_for_testlib})
 endif()
-message(STATUS "all source file: ${source_code_files}")
-message(STATUS "all source file: ${BUILD_TRAGET_DEMO}")
 
-add_executable(${PROJECT_NAME} ${source_code_files})
+message(STATUS "all source file: ${source_code_files}")
+
+if(BUILD_TARGET_DEMO)
+  add_executable(${PROJECT_NAME} ${source_code_files})
+elseif(BUILD_TARGET_TEST)
+  add_executable(${PROJECT_NAME} ${source_code_files})
+elseif(BUILD_TARGET_LIB)
+  add_library(${PROJECT_NAME} SHARED ${source_code_files})
+endif()
+
 target_link_libraries(${PROJECT_NAME} ${LIBS})

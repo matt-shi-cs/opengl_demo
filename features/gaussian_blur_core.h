@@ -1,7 +1,7 @@
 /*** 
  * @Author: Matt.SHI
  * @Date: 2023-01-03 08:40:40
- * @LastEditTime: 2023-01-03 10:10:49
+ * @LastEditTime: 2023-01-04 14:08:34
  * @LastEditors: Matt.SHI
  * @Description: 
  * @FilePath: /opengl_demo/features/gaussian_blur_core.h
@@ -10,6 +10,7 @@
 
 class Shader;
 class FrameBuffer;
+class GLFWwindow;
 
 namespace ESSILOR
 {
@@ -20,8 +21,12 @@ namespace ESSILOR
             virtual ~GassianBlurCore();
 
         public:
-            int init(unsigned int w, unsigned int h,unsigned int channel);
+            int init(unsigned int outbuf_w, unsigned int outbuf_h,unsigned int outbuf_channel,
+                const char* vertexShaderFile, const char* fragmentShaderFile);
             void unit();
+
+            unsigned long getOutBufLen();
+            void set_enable_gui(bool enable);
 
             unsigned char*  doGaussianBlur(
                 unsigned char *base_image_data,
@@ -35,11 +40,11 @@ namespace ESSILOR
 
         protected:
             void initGraphicEnv();
-            int initOpenGL(unsigned int w, unsigned int h);
+            int  initOpenGL(unsigned int outbuf_w, unsigned int outbuf_h,bool enable_gui = false);
             void initShader(
                 const char* vertexShaderFile = "../resources/features_res/gaussain_bulr/gauss_blur.vs",
                 const char* fragmentShaderFile = "../resources/features_res/gaussain_bulr/gauss_blur.fs");
-            void initFrameBuffer(unsigned int w, unsigned int h,unsigned int channel);
+            void initFrameBuffer(unsigned int outbuf_w, unsigned int outbuf_h,unsigned int outbuf_channel);
 
             void initTexture();
 
@@ -53,6 +58,7 @@ namespace ESSILOR
         private:
             Shader *m_shader;
             FrameBuffer* m_frameBuffer;
+            GLFWwindow* m_glWindow;
 
             unsigned int m_VBO;
             unsigned int m_VAO;
@@ -64,6 +70,9 @@ namespace ESSILOR
             unsigned char* m_result_buffer;
             unsigned int m_result_w;
             unsigned int m_result_h;
-            unsigned int m_result_channel;    
+            unsigned int m_result_channel;  
+
+            bool m_flags_using_framebuffer;
+            bool m_flags_enable_gui;  
     };
 }

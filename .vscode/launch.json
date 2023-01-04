@@ -8,9 +8,10 @@
             "name": "C/C++: g++-11 Build and debug active file",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceFolder}/build/opengl_demo",
+            "program": "${workspaceFolder}/build/guassian_blur",
             "args": [
-                "/Users/mattshi/work/essilor/code/feasibility/opengl/opengl_demo/resources/features_res/gaussain_bulr/zones.bmp"
+                "/Users/mattshi/work/essilor/code/feasibility/opengl/opengl_demo/resources/features_res/gaussain_bulr/zones.bmp",
+                "/Users/mattshi/work/essilor/code/prjs/pal/svn/BlurScript/reconstructedImage.png"
             ],
             "stopAtEntry": true,
             "cwd": "${workspaceFolder}/build",

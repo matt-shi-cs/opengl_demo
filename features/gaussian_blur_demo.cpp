@@ -1,10 +1,10 @@
 /*** 
  * @Author: Matt.SHI
  * @Date: 2022-12-10 14:46:29
- * @LastEditTime: 2022-12-25 18:12:10
+ * @LastEditTime: 2023-01-04 14:49:23
  * @LastEditors: Matt.SHI
  * @Description: 
- * @FilePath: /opengl_demo/features/gaussian_blur.cpp
+ * @FilePath: /opengl_demo/features/gaussian_blur_demo.cpp
  * @Copyright © 2022 Essilor. All rights reserved.
  */
 
@@ -46,8 +46,8 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
 
 // settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+const unsigned int SCR_WIDTH = 1920;
+const unsigned int SCR_HEIGHT = 1440;
 const int TEXT_WIDTH = 8;
 const int TEXT_HEIGHT = 13;
 #ifdef __ENABLE_GLUT__
@@ -270,16 +270,25 @@ int main(int argv, const char *argc[])
     // processing input params
     const char *input_data_path = nullptr;
     const char *input_zone_path = nullptr;
-    if (argv > 1)
+    if (argv > 2)
+    {
+        input_zone_path = argc[1];
+        input_data_path = argc[2];
+        g_using_camera = 0;
+        std::cout << "[INPUT] use input file, path: " << input_zone_path << std::endl;
+        std::cout << "[INPUT] use input file, path: " << input_data_path << std::endl;
+    }
+    else if(argv > 1)
     {
         input_zone_path = argc[1];
         g_using_camera = 1;
         std::cout << "[INPUT] use input file, path: " << input_zone_path << std::endl;
+        std::cout << "[INPUT] use camera "<< std::endl;
     }
     else
     {
-        std::cout << "[INPUT] use camera live stream: " << std::endl;
         g_using_camera = 1;
+        std::cout << "[INPUT] use camera" << std::endl;
     }
 
     // glfw window creation
@@ -310,10 +319,10 @@ int main(int argv, const char *argc[])
 
     float vertices[] = {
         // positions          // colors           // texture coords
-        1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,   // top right
-        1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,  // bottom right
-        -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // bottom left
-        -1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f   // top left
+        1.0f, 1.0f, 0.0f,       1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
+        1.0f, -1.0f, 0.0f,      0.0f, 1.0f, 0.0f,   1.0f, 0.0f,  // bottom right
+        -1.0f, -1.0f, 0.0f,     0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
+        -1.0f, 1.0f, 0.0f,      1.0f, 1.0f, 0.0f,   0.0f, 1.0f   // top left
     };
     unsigned int indices[] = {
         0, 1, 3, // first triangle
@@ -514,12 +523,8 @@ int main(int argv, const char *argc[])
             }
             else if (frameBufForSaving != nullptr)
             {
-                if(g_draw_frame <= 0)
-                {
-                    
-                }
-                glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, frameBufForSaving);
-                saveFrameBuffer2PNG((const char *)(frameBufForSaving), width, height, 4, save_path);
+                glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, frameBufForSaving);
+                saveFrameBuffer2PNG((const char *)(frameBufForSaving), width, height, 3, save_path);
             }
             g_save_frame = 0;
         }
