@@ -1,7 +1,7 @@
 /*** 
  * @Author: Matt.SHI
  * @Date: 2023-01-03 09:33:35
- * @LastEditTime: 2023-01-04 13:43:01
+ * @LastEditTime: 2023-01-04 19:26:24
  * @LastEditors: Matt.SHI
  * @Description: 
  * @FilePath: /opengl_demo/features/gaussian_blur_main.cpp
@@ -79,8 +79,7 @@ void initCam()
 unsigned char* loadFile(const char* filePath,
     int &width, int &height, int &nrChannels)
 {
-    unsigned char *data = stbi_load(filePath, &width, &height, &nrChannels, nrChannels);
-    return data;
+    return stbi_load(filePath, &width, &height, &nrChannels, nrChannels);
 }
 
 void generateFilePath(char *filename, double index, const unsigned char *basePath)
@@ -109,23 +108,22 @@ int main(int argv, const char *argc[])
     const char* fragmentShaderFile = "../resources/features_res/gaussain_bulr/gauss_blur.fs";
     g_blur_core.set_enable_gui(true);
 
-    g_blur_core.init(WIN_W,WIN_H,WIN_C,
-        vertexShaderFile,
-        fragmentShaderFile
-    );
+    g_blur_core.init(WIN_W,WIN_H,WIN_C,vertexShaderFile,fragmentShaderFile);
 
     //init cam
     initCam();
     cv::Mat frameFromCam;
 
     //init filter zone
-    int filterZoneW = 0, filterZoneH = 0, filterZoneC = 0;
+    int filterZoneW = 0, filterZoneH = 0, filterZoneC = 3;
     unsigned char* filterZoneData = loadFile(filterZoneFile,filterZoneW,filterZoneH,filterZoneC);
 
     int input = ' ';
+    int frame_index = 0;
     while(input != 'x')
     {
         g_cam.read(frameFromCam);
+        frame_index++;
 
         unsigned char* blurData = g_blur_core.doGaussianBlur(
             frameFromCam.data,frameFromCam.cols,frameFromCam.rows,frameFromCam.channels(),
@@ -144,7 +142,7 @@ int main(int argv, const char *argc[])
             break;
         }
 
-        if(g_save_imgs)
+        if(frame_index%24 == 0)
         {
             char save_path[256] = {0};
             generateFilePath(save_path, time(nullptr), g_save_base_path);

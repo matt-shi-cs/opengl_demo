@@ -1,7 +1,7 @@
 /*** 
  * @Author: Matt.SHI
  * @Date: 2022-12-10 14:46:29
- * @LastEditTime: 2023-01-04 14:49:23
+ * @LastEditTime: 2023-01-04 19:35:10
  * @LastEditors: Matt.SHI
  * @Description: 
  * @FilePath: /opengl_demo/features/gaussian_blur_demo.cpp
@@ -165,7 +165,7 @@ unsigned char* fillTextureByFile(const char* filePath,
        fillTextureByBuffer(data, width, height, 
        texureID, textureIDInGL, 
        innerPixelFmt, inputPixelFmt, dataType);
-       std::cout << "Load texture:" <<filePath <<" done"<<std::endl;
+       std::cout << "Load texture:" <<filePath <<" done "<<"W:"<<width<<" H:"<<height<<" C:"<<nrChannels<<std::endl;
     }
     else
     {
@@ -367,7 +367,7 @@ int main(int argv, const char *argc[])
         unsigned char *data = fillTextureByFile(
             input_data_path, width, height, nrChannels,
             textureIdxs[0],GL_TEXTURE0,
-            GL_RGB,GL_RGB,GL_UNSIGNED_BYTE);
+            GL_RGBA,GL_RGB,GL_UNSIGNED_BYTE);
         liveFrameBufMat = cv::Mat(height, width, CV_8UC3, data);
         glViewport(0, 0, width, height);
         
@@ -395,7 +395,7 @@ int main(int argv, const char *argc[])
     unsigned char* g_zones_buffer =  fillTextureByFile(input_zone_path,
         width_zone, height_zone, nrChannels_zone,
         zoneTextureIdx,GL_TEXTURE1,
-        GL_RGB,GL_RGB,GL_UNSIGNED_BYTE);
+        GL_RGBA,GL_RGBA,GL_UNSIGNED_BYTE);
 
     // using framebuffer
     FrameBuffer fbo;
@@ -440,7 +440,7 @@ int main(int argv, const char *argc[])
 
             updateTexture2DMemData(textureIdxs[0], GL_TEXTURE0,
                                     liveFrameBufMat.cols, liveFrameBufMat.rows, nrChannels,
-                                    GL_RGB, GL_BGR, liveFrameBufMat.data);
+                                    GL_RGBA, GL_BGR, liveFrameBufMat.data);
             glBindVertexArray(VAO);
             if (g_draw_frame > 0)
             {
@@ -465,13 +465,13 @@ int main(int argv, const char *argc[])
             {
                 updateTexture2DMemData(opTextureIdx, GL_TEXTURE0,
                                     liveFrameBufMat.cols, liveFrameBufMat.rows, nrChannels,
-                                    GL_RGB, GL_BGR, liveFrameBufMat.data);
+                                    GL_RGBA, GL_BGR, liveFrameBufMat.data);
             }
             if(nullptr != g_zones_buffer)
             {
                 updateTexture2DMemData(zoneTextureIdx, GL_TEXTURE1,
                                     width_zone, height_zone, nrChannels_zone,
-                                    GL_RGB, GL_BGR, g_zones_buffer);
+                                    GL_RGBA, GL_BGR, g_zones_buffer);
             }
 
             ourShader.use();
