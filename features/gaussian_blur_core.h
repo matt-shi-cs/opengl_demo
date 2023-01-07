@@ -1,7 +1,7 @@
 /*** 
  * @Author: Matt.SHI
  * @Date: 2023-01-03 08:40:40
- * @LastEditTime: 2023-01-04 19:39:02
+ * @LastEditTime: 2023-01-07 12:05:48
  * @LastEditors: Matt.SHI
  * @Description: 
  * @FilePath: /opengl_demo/features/gaussian_blur_core.h
@@ -27,7 +27,7 @@ namespace ESSILOR
 
             unsigned long getOutBufLen();
             void set_enable_gui(bool enable);
-            void set_kernel_blur_step(float blur_step);
+            void set_pixel_size(float pixel_size_x, float pixel_size_y);
 
             unsigned char*  doGaussianBlur(
                 unsigned char *base_image_data,
@@ -76,6 +76,7 @@ namespace ESSILOR
             bool m_flags_using_framebuffer;
             bool m_flags_enable_gui; 
 
-            float m_kernel_step; 
+            float m_shader_pixel_size_x;
+            float m_shader_pixel_size_y; 
     };
 }

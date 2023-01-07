@@ -38,10 +38,11 @@ in vec2  TexCoords;
 
 uniform sampler2D imageTexture;
 uniform sampler2D filterZones;
-uniform float kernelStep;
+uniform float kernelPixelSizeX;
+uniform float kernelPixelSizeY;
 
 
-void gaussianBulr35(out vec4 color,in vec2 uv,in float stepValue, in int kernalSize, in float kernel[1225])
+void gaussianBulr35(out vec4 color,in vec2 uv,in float pixelSizeX, float pixelSizeY, in int kernalSize, in float kernel[1225])
 {
     vec4 sum = vec4(0.0);
     int halfKernalSize = int(kernalSize / 2);    
@@ -49,13 +50,13 @@ void gaussianBulr35(out vec4 color,in vec2 uv,in float stepValue, in int kernalS
     {
         for(int j = 0 ; j < kernalSize; j++)
         {
-            sum += texture(imageTexture, uv + vec2(i - halfKernalSize,j- halfKernalSize) * stepValue) * kernel[i*j];
+            sum += texture(imageTexture, uv + vec2((i - halfKernalSize)*pixelSizeX,(j- halfKernalSize)*pixelSizeY)) * kernel[i*j];
         }
     }
     color =  sum;
 }
 
-void gaussianBulr17(out vec4 color,in vec2 uv,in float stepValue, in int kernalSize, in float kernel[289])
+void gaussianBulr17(out vec4 color,in vec2 uv,in float pixelSizeX, float pixelSizeY, in int kernalSize, in float kernel[289])
 {
     vec4 sum = vec4(0.0);
     int halfKernalSize = int(kernalSize / 2);    
@@ -63,13 +64,13 @@ void gaussianBulr17(out vec4 color,in vec2 uv,in float stepValue, in int kernalS
     {
         for(int j = 0 ; j < kernalSize; j++)
         {
-            sum += texture(imageTexture, uv + vec2(i - halfKernalSize,j- halfKernalSize) * stepValue) * kernel[i*j];
+            sum += texture(imageTexture, uv + vec2((i - halfKernalSize)*pixelSizeX,(j- halfKernalSize)*pixelSizeY)) * kernel[i*j];
         }
     }
     color =  sum;
 }
 
-void gaussianBulr9(out vec4 color,in vec2 uv,in float stepValue, in int kernalSize, in float kernel[81])
+void gaussianBulr9(out vec4 color,in vec2 uv,in float pixelSizeX, float pixelSizeY, in int kernalSize, in float kernel[81])
 {
     vec4 sum = vec4(0.0);
     int halfKernalSize = int(kernalSize / 2);    
@@ -77,13 +78,14 @@ void gaussianBulr9(out vec4 color,in vec2 uv,in float stepValue, in int kernalSi
     {
         for(int j = 0 ; j < kernalSize; j++)
         {
-            sum += texture(imageTexture, uv + vec2(i - halfKernalSize,j- halfKernalSize) * stepValue) * kernel[i*j];
+            //sum += texture(imageTexture, uv + vec2(i - halfKernalSize,j- halfKernalSize) * stepValue) * kernel[i*j];
+            sum += texture(imageTexture, uv + vec2((i - halfKernalSize)*pixelSizeX,(j- halfKernalSize)*pixelSizeY)) * kernel[i*j];
         }
     }
     color =  sum;
 }
 
-void gaussianBulr3(out vec4 color,in vec2 uv,in float stepValue, in int kernalSize, in float kernel[9])
+void gaussianBulr3(out vec4 color,in vec2 uv,in float pixelSizeX, float pixelSizeY, in int kernalSize, in float kernel[9])
 {
     vec4 sum = vec4(0.0);
     int halfKernalSize = int(kernalSize / 2);    
@@ -91,7 +93,7 @@ void gaussianBulr3(out vec4 color,in vec2 uv,in float stepValue, in int kernalSi
     {
         for(int j = 0 ; j < kernalSize; j++)
         {
-            sum += texture(imageTexture, uv + vec2(i - halfKernalSize,j- halfKernalSize) * stepValue) * kernel[i*j];
+            sum += texture(imageTexture, uv + vec2((i - halfKernalSize)*pixelSizeX,(j- halfKernalSize)*pixelSizeY)) * kernel[i*j];
         }
     }
     color =  sum;
@@ -100,10 +102,34 @@ void gaussianBulr3(out vec4 color,in vec2 uv,in float stepValue, in int kernalSi
 void main(){
     vec2 uv = TexCoords;
     vec4 kernalSizeV4 = texture(filterZones,uv);
-    int kernalSize = 3;
-    float stepValue = kernalSizeV4.x * kernelStep*12.8;
-    
-    gaussianBulr3(FragColor,uv,stepValue,kernalSize,kernel3);
+    float scaleKernelSize = kernalSizeV4.x*255;//scale back to 0-255
+    //if(scaleKernelSize <= 18.0)
+    {
+        int kernalSize = 9;
+        float scaleFactor = scaleKernelSize/kernalSize;
+        float stepValueX = kernelPixelSizeX*scaleFactor;
+        float stepValueY = kernelPixelSizeY*scaleFactor;
+
+        gaussianBulr9(FragColor,uv,stepValueX,stepValueY,kernalSize,kernel9);
+    }
+    /*else if(scaleKernelSize > 18.0 && scaleKernelSize <= 36.0)
+    {
+        int kernalSize = 17;
+        float scaleFactor = scaleKernelSize/kernalSize;
+        float stepValueX = kernelPixelSizeX*scaleFactor;
+        float stepValueY = kernelPixelSizeY*scaleFactor;
+
+        gaussianBulr17(FragColor,uv,stepValueX,stepValueY,kernalSize,kernel17);
+    }
+    else
+    {
+        int kernalSize = 35;
+        float scaleFactor = scaleKernelSize/kernalSize;
+        float stepValueX = kernelPixelSizeX*scaleFactor;
+        float stepValueY = kernelPixelSizeY*scaleFactor;
+
+        gaussianBulr35(FragColor,uv,stepValueX,stepValueY,kernalSize,kernel35);
+    }*/
 }
 
 

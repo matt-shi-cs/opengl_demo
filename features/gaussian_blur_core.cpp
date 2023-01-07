@@ -1,7 +1,7 @@
 /*** 
  * @Author: Matt.SHI
  * @Date: 2022-12-29 17:30:09
- * @LastEditTime: 2023-01-04 20:09:29
+ * @LastEditTime: 2023-01-07 12:14:52
  * @LastEditors: Matt.SHI
  * @Description: 
  * @FilePath: /opengl_demo/features/gaussian_blur_core.cpp
@@ -41,7 +41,8 @@ namespace ESSILOR
                                          m_shader(nullptr),
                                          m_flags_using_framebuffer(false),
                                          m_flags_enable_gui(false),
-                                         m_kernel_step(0.002)
+                                         m_shader_pixel_size_x(0.002),
+                                         m_shader_pixel_size_y(0.002)
     {
     }
 
@@ -60,7 +61,10 @@ namespace ESSILOR
             initShader(vertexShaderFile, fragmentShaderFile);
             initFrameBuffer(outbuf_w, outbuf_h, outbuf_channel);
             initTexture();
-            set_kernel_blur_step(m_kernel_step);
+
+            m_shader_pixel_size_x = 1.0 / outbuf_w;
+            m_shader_pixel_size_y = 1.0 / outbuf_h;
+            set_pixel_size(m_shader_pixel_size_x,m_shader_pixel_size_y);
         }
         catch (const std::exception &e)
         {
@@ -80,11 +84,12 @@ namespace ESSILOR
         m_flags_enable_gui = enable;
     }
 
-    void GassianBlurCore::set_kernel_blur_step(float blur_step)
+    void GassianBlurCore::set_pixel_size(float pixel_size_x, float pixel_size_y)
     {
         if(nullptr != m_shader)
         {
-            m_shader->setFloat("kernelStep",blur_step);
+            m_shader->setFloat("kernelPixelSizeX",pixel_size_x);
+            m_shader->setFloat("kernelPixelSizeY",pixel_size_y);
         }
     }
 

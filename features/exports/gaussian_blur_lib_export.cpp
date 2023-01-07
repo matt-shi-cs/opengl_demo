@@ -1,7 +1,7 @@
 /*** 
  * @Author: Matt.SHI
  * @Date: 2023-01-03 14:08:26
- * @LastEditTime: 2023-01-04 20:10:55
+ * @LastEditTime: 2023-01-07 12:11:57
  * @LastEditors: Matt.SHI
  * @Description: 
  * @FilePath: /opengl_demo/features/exports/gaussian_blur_lib_export.cpp
@@ -43,11 +43,11 @@ extern "C"
             g_ins->init(w, h, channel,vertexShaderFile,fragmentShaderFile);
     }
 
-    void setKernelStep(long objIns, float kernelStep)
+    void setPixelSize(long objIns, float pixelSizeX, float pixelSizeY)
     {
         //ESSILOR::GassianBlurCore* ins = reinterpret_cast<ESSILOR::GassianBlurCore*>(objIns);
         if(nullptr != g_ins)
-            g_ins->set_kernel_blur_step(kernelStep);
+            g_ins->set_pixel_size(pixelSizeX, pixelSizeY);
     }
 
     long doGaussianBlur(long objIns, 
