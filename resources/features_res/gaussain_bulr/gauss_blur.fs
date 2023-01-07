@@ -42,7 +42,63 @@ uniform float kernelPixelSizeX;
 uniform float kernelPixelSizeY;
 
 
+void gaussianBulr39(out vec4 color,in vec2 uv,in float pixelSizeX, float pixelSizeY, in int kernalSize, in float kernel[1521])
+{
+    vec4 sum = vec4(0.0);
+    int halfKernalSize = int(kernalSize / 2);    
+    for(int i = 0; i < kernalSize; i++)
+    {
+        for(int j = 0 ; j < kernalSize; j++)
+        {
+            sum += texture(imageTexture, uv + vec2((i - halfKernalSize)*pixelSizeX,(j- halfKernalSize)*pixelSizeY)) * kernel[i*j];
+        }
+    }
+    color =  sum;
+}
+
 void gaussianBulr35(out vec4 color,in vec2 uv,in float pixelSizeX, float pixelSizeY, in int kernalSize, in float kernel[1225])
+{
+    vec4 sum = vec4(0.0);
+    int halfKernalSize = int(kernalSize / 2);    
+    for(int i = 0; i < kernalSize; i++)
+    {
+        for(int j = 0 ; j < kernalSize; j++)
+        {
+            sum += texture(imageTexture, uv + vec2((i - halfKernalSize)*pixelSizeX,(j- halfKernalSize)*pixelSizeY)) * kernel[i*j];
+        }
+    }
+    color =  sum;
+}
+
+void gaussianBulr29(out vec4 color,in vec2 uv,in float pixelSizeX, float pixelSizeY, in int kernalSize, in float kernel[841])
+{
+    vec4 sum = vec4(0.0);
+    int halfKernalSize = int(kernalSize / 2);    
+    for(int i = 0; i < kernalSize; i++)
+    {
+        for(int j = 0 ; j < kernalSize; j++)
+        {
+            sum += texture(imageTexture, uv + vec2((i - halfKernalSize)*pixelSizeX,(j- halfKernalSize)*pixelSizeY)) * kernel[i*j];
+        }
+    }
+    color =  sum;
+}
+
+void gaussianBulr27(out vec4 color,in vec2 uv,in float pixelSizeX, float pixelSizeY, in int kernalSize, in float kernel[729])
+{
+    vec4 sum = vec4(0.0);
+    int halfKernalSize = int(kernalSize / 2);    
+    for(int i = 0; i < kernalSize; i++)
+    {
+        for(int j = 0 ; j < kernalSize; j++)
+        {
+            sum += texture(imageTexture, uv + vec2((i - halfKernalSize)*pixelSizeX,(j- halfKernalSize)*pixelSizeY)) * kernel[i*j];
+        }
+    }
+    color =  sum;
+}
+
+void gaussianBulr19(out vec4 color,in vec2 uv,in float pixelSizeX, float pixelSizeY, in int kernalSize, in float kernel[361])
 {
     vec4 sum = vec4(0.0);
     int halfKernalSize = int(kernalSize / 2);    
@@ -85,6 +141,20 @@ void gaussianBulr9(out vec4 color,in vec2 uv,in float pixelSizeX, float pixelSiz
     color =  sum;
 }
 
+void gaussianBulr7(out vec4 color,in vec2 uv,in float pixelSizeX, float pixelSizeY, in int kernalSize, in float kernel[49])
+{
+    vec4 sum = vec4(0.0);
+    int halfKernalSize = int(kernalSize / 2);    
+    for(int i = 0; i < kernalSize; i++)
+    {
+        for(int j = 0 ; j < kernalSize; j++)
+        {
+            sum += texture(imageTexture, uv + vec2((i - halfKernalSize)*pixelSizeX,(j- halfKernalSize)*pixelSizeY)) * kernel[i*j];
+        }
+    }
+    color =  sum;
+}
+
 void gaussianBulr3(out vec4 color,in vec2 uv,in float pixelSizeX, float pixelSizeY, in int kernalSize, in float kernel[9])
 {
     vec4 sum = vec4(0.0);
@@ -103,23 +173,30 @@ void main(){
     vec2 uv = TexCoords;
     vec4 kernalSizeV4 = texture(filterZones,uv);
     float scaleKernelSize = kernalSizeV4.x*255;//scale back to 0-255
-    //if(scaleKernelSize <= 18.0)
+    if(scaleKernelSize <= 13.0)
     {
-        int kernalSize = 9;
+        int kernalSize = 7;
         float scaleFactor = scaleKernelSize/kernalSize;
         float stepValueX = kernelPixelSizeX*scaleFactor;
         float stepValueY = kernelPixelSizeY*scaleFactor;
-
-        gaussianBulr9(FragColor,uv,stepValueX,stepValueY,kernalSize,kernel9);
+        gaussianBulr7(FragColor,uv,stepValueX,stepValueY,kernalSize,kernel7);
     }
-    /*else if(scaleKernelSize > 18.0 && scaleKernelSize <= 36.0)
+    else if(scaleKernelSize > 13.0 && scaleKernelSize <= 26.0)
     {
         int kernalSize = 17;
         float scaleFactor = scaleKernelSize/kernalSize;
         float stepValueX = kernelPixelSizeX*scaleFactor;
         float stepValueY = kernelPixelSizeY*scaleFactor;
-
         gaussianBulr17(FragColor,uv,stepValueX,stepValueY,kernalSize,kernel17);
+
+    }else if(scaleKernelSize > 26.0 && scaleKernelSize <= 39.0)
+    {
+        int kernalSize = 27;
+        float scaleFactor = scaleKernelSize/kernalSize;
+        float stepValueX = kernelPixelSizeX*scaleFactor;
+        float stepValueY = kernelPixelSizeY*scaleFactor;
+
+        gaussianBulr27(FragColor,uv,stepValueX,stepValueY,kernalSize,kernel27);
     }
     else
     {
@@ -129,7 +206,7 @@ void main(){
         float stepValueY = kernelPixelSizeY*scaleFactor;
 
         gaussianBulr35(FragColor,uv,stepValueX,stepValueY,kernalSize,kernel35);
-    }*/
+    }
 }
 
 
