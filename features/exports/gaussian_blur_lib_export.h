@@ -1,7 +1,7 @@
 /*** 
  * @Author: Matt.SHI
  * @Date: 2023-01-03 13:29:47
- * @LastEditTime: 2023-01-07 12:11:49
+ * @LastEditTime: 2023-01-09 10:18:21
  * @LastEditors: Matt.SHI
  * @Description: 
  * @FilePath: /opengl_demo/features/exports/gaussian_blur_lib_export.h
@@ -9,7 +9,10 @@
  */
 
 #include "features/gaussian_blur_core.h"
+#ifdef __APPLE__
 #include <sys/shm.h>
+#else
+#endif//__APPLE__
 
 /*
 char* g_shared_mem_addr = nullptr;
