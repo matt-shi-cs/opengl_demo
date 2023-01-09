@@ -162,7 +162,8 @@ namespace ESSILOR
 
     int GassianBlurCore::initOpenGL(unsigned int outbuf_w, unsigned int outbuf_h, bool enable_gui)
     {
-        glfwInit();
+        int op = glfwInit();
+        std::cout << "[INIT]glfwInit return " << op;
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -177,17 +178,19 @@ namespace ESSILOR
         }
 #ifdef __APPLE__
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#else
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
         m_glWindow = glfwCreateWindow(outbuf_w, outbuf_h, "LearnOpenGL", NULL, NULL);
         if (m_glWindow == NULL)
         {
-            std::cout << "Failed to create GLFW window" << std::endl;
+            std::cout << "[INIT]Failed to create GLFW window" << std::endl;
             glfwTerminate();
             return -1;
         }
         else
         {
-            std::cout << "Done to create GLFW window" << std::endl;
+            std::cout << "[INIT]Done to create GLFW window" << std::endl;
         }
 
         glfwMakeContextCurrent(m_glWindow);
@@ -195,12 +198,12 @@ namespace ESSILOR
         // ---------------------------------------
         if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
         {
-            std::cout << "Failed to initialize GLAD" << std::endl;
+            std::cout << "[INIT]Failed to initialize GLAD" << std::endl;
             return -1;
         }
         else
         {
-            std::cout << "Done to initialize GLAD" << std::endl;
+            std::cout << "[INIT]Done to initialize GLAD" << std::endl;
         }
         glViewport(0, 0, outbuf_w, outbuf_h);
         return 1;
@@ -260,8 +263,8 @@ namespace ESSILOR
         if (nullptr == m_frameBuffer)
         {
             std::cout << "[shader] init frame buffer with:w" << outbuf_w << " with:h" << outbuf_h << std::endl;
-            m_frameBuffer = new FrameBuffer();
-            m_frameBuffer->init(outbuf_w, outbuf_h);
+            //m_frameBuffer = new FrameBuffer();
+            //m_frameBuffer->init(outbuf_w, outbuf_h);
         }
         if (nullptr == m_result_buffer)
         {

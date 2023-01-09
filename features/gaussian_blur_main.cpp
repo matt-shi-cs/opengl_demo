@@ -17,20 +17,24 @@
 #include <opencv2/highgui/highgui.hpp>
 
 #include <stdio.h>
-#include <sys/time.h>
+
 
 #include <stb_image.h>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <tools/stb_image_write.h>
 
 #ifdef __APPLE__
-#else
+#include <sys/time.h>
 #include <termio.h>
+#else
 #endif
 
 
 ESSILOR::GassianBlurCore g_blur_core;
+
+#ifdef USING_CAMERA
 cv::VideoCapture g_cam;
+#endif //USING_CAMERA
 
 constexpr int WIN_W = 1920;
 constexpr int WIN_H = 1440;
@@ -60,6 +64,7 @@ int scanKeyboard()
     return input;
 }
 
+#ifdef USING_CAMERA
 void initCam()
 {
     try
@@ -75,6 +80,7 @@ void initCam()
         std::cerr << "error" << '\n';
     }
 }
+#endif //#ifdef USING_CAMERA
 
 unsigned char* loadFile(const char* filePath,
     int &width, int &height, int &nrChannels)
@@ -111,7 +117,9 @@ int main(int argv, const char *argc[])
     g_blur_core.init(WIN_W,WIN_H,WIN_C,vertexShaderFile,fragmentShaderFile);
 
     //init cam
+#ifdef USING_CAMERA
     initCam();
+#endif //
     cv::Mat frameFromCam;
 
     //init filter zone
@@ -122,7 +130,9 @@ int main(int argv, const char *argc[])
     int frame_index = 0;
     while(input != 'x')
     {
+#ifdef USING_CAMERA
         g_cam.read(frameFromCam);
+#endif //
         frame_index++;
 
         unsigned char* blurData = g_blur_core.doGaussianBlur(

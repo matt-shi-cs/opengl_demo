@@ -42,6 +42,8 @@
 #include <opencv2/videoio.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+//#define _USING_CAMERA
+
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
 
@@ -63,7 +65,9 @@ int g_using_camera = 0;
 float g_running_kernelStep = 0.005;
 bool g_running_params_changed = false;
 
+#ifdef _USING_CAMERA
 cv::VideoCapture g_cam;
+#endif //
 unsigned char g_save_base_path[] = "./frames/";
 
 void saveFrameBuffer2PNG(const char *buf,
@@ -78,6 +82,7 @@ void generateFilePath(char *filename, double index, const unsigned char *basePat
     sprintf(filename, "%s_%.4f.png", basePath, index);
 }
 
+#ifdef _USING_CAMERA
 void initCam()
 {
     try
@@ -94,10 +99,13 @@ void initCam()
     }
 }
 
+
 void readFrame(cv::Mat &frame)
 {
     g_cam.read(frame);
 }
+
+#endif //
 
 unsigned int *create2DTexture(int count)
 {
@@ -266,6 +274,8 @@ int main(int argv, const char *argc[])
 
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#else 
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
     // processing input params
     const char *input_data_path = nullptr;
@@ -378,11 +388,13 @@ int main(int argv, const char *argc[])
     }
     else
     {
+#ifdef _USING_CAMERA
         initCam();
         readFrame(liveFrameBufMat);
         width = liveFrameBufMat.cols;
         height = liveFrameBufMat.rows;
         std::cout << "[CAMERA] inited:  width = " << width << " height = " << height << " fmt = "<<liveFrameBufMat.type() <<std::endl;
+#endif //
     }
     // texture end
 
@@ -420,10 +432,12 @@ int main(int argv, const char *argc[])
     {
         processInput(window);
         // read cam
+#ifdef _USING_CAMERA
         if (g_using_camera)
         {
             readFrame(liveFrameBufMat);
         }
+#endif //_USING_CAMERA
         if(g_running_params_changed)
         {
             updateBlurParams(g_running_kernelStep,ourShader);
@@ -433,7 +447,7 @@ int main(int argv, const char *argc[])
         startTime = glfwGetTime();
         if(g_using_opencv)
         {
-            cv::GaussianBlur(liveFrameBufMat, liveFrameBufMat, cv::Size(17, 17), 0, 0);
+            //cv::GaussianBlur(liveFrameBufMat, liveFrameBufMat, cv::Size(17, 17), 0, 0);
 
             glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT);
