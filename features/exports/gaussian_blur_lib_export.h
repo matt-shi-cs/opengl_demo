@@ -1,7 +1,7 @@
 /*** 
  * @Author: Matt.SHI
  * @Date: 2023-01-03 13:29:47
- * @LastEditTime: 2023-01-09 10:18:21
+ * @LastEditTime: 2023-01-09 10:56:17
  * @LastEditors: Matt.SHI
  * @Description: 
  * @FilePath: /opengl_demo/features/exports/gaussian_blur_lib_export.h
@@ -9,9 +9,11 @@
  */
 
 #include "features/gaussian_blur_core.h"
-#ifdef __APPLE__
+#ifdef __APPLE__ or __LINUX__
 #include <sys/shm.h>
+#define EXPORT __attribute__((visibility("default")))
 #else
+#define EXPORT __declspec(dllexport)
 #endif//__APPLE__
 
 /*
@@ -44,16 +46,16 @@ void unit_mem()
 
 extern "C"
 {
-    long createIns();
+    EXPORT long createIns();
     
-    void destroyIns(long objIns);
+    EXPORT void destroyIns(long objIns);
     
-    void initIns(long objIns, unsigned int w, unsigned int h,unsigned int channel,
+    EXPORT void initIns(long objIns, unsigned int w, unsigned int h,unsigned int channel,
         const char* vertexShaderFile, const char* fragmentShaderFile);
 
-    void setPixelSize(long objIns, float pixelSizeX, float pixelSizeY);
+    EXPORT void setPixelSize(long objIns, float pixelSizeX, float pixelSizeY);
 
-    long doGaussianBlur(long objIns, 
+    EXPORT long doGaussianBlur(long objIns, 
         unsigned char* data, unsigned int w, unsigned int h, unsigned int channel,
         unsigned char* filter_data, unsigned int filter_w, unsigned int filter_h, unsigned int filter_channel,
         unsigned char* out_buffer);
